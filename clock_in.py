@@ -1,4 +1,3 @@
-from aip import AipOcr
 import requests
 import json
 import argparse
@@ -11,19 +10,25 @@ parser.add_argument('--password', type=str, default=None)
 parser.add_argument('--province', type=str, default=None)
 parser.add_argument('--city', type=str, default=None)
 parser.add_argument('--county', type=str, default=None)
-parser.add_argument('--app_id', type=str, default=None)
-parser.add_argument('--api_key', type=str, default=None)
-parser.add_argument('--secret_key', type=str, default=None)
 args = parser.parse_args()
-
-# 初始化OCR识别API
-OCRClient = AipOcr(args.app_id, args.api_key, args.secret_key)
 
 def captchaOCR():
     captcha = ''
+    token   = '' 
     while len(captcha) != 4:
         token = json.loads(requests.get('https://fangkong.hnu.edu.cn/api/v1/account/getimgvcode').text)['data']['Token']
-        captcha = OCRClient.basicGeneralUrl(f'https://fangkong.hnu.edu.cn/imagevcode?token={token}')['words_result'][0]['words']
+        data = {
+                'image_url': f'https://fangkong.hnu.edu.cn/imagevcode?token={token}',
+                'type': 'https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic',
+                'detect_direction': 'false'
+                }
+        captcha = requests.post('https://cloud.baidu.com/aidemo', data=data).json()['data']['words_result'][0]['words']
+    print(token, captcha)
+    return token, captcha
+            
+    while len(captcha) != 4:
+        token = json.loads(requests.get('https://fangkong.hnu.edu.cn/api/v1/account/getimgvcode').text)['data']['Token']
+        captcha = requests.post('https://cloud.baidu.com/aidemo', data=data).json()['data']['words_result'][0]['words']
     return token, captcha
 
 def login():
@@ -76,6 +81,9 @@ def main():
     if clockin.status_code == 200:
         if '成功' in clockin.text or '已提交' in clockin.text:
             isSucccess = 0
+        else:
+            isSucccess = 1
+            print(json.loads(clockin.text)['msg'])
     else:
         isSucccess = 1
     print(json.loads(clockin.text)['msg'])
