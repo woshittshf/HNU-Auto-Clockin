@@ -3,6 +3,8 @@ import json
 import argparse
 import re
 
+# comment for github actions
+
 # 初始化变量
 parser = argparse.ArgumentParser()
 parser.add_argument('--username', type=str, default=None)
